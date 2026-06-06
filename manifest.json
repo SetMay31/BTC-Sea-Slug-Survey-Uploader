@@ -1,0 +1,31 @@
+{
+  "name": "Sea Slug Survey — Data Uploader",
+  "short_name": "Sea Slug Survey",
+  "description": "Field data input for Black Turtle Conservation sea slug (nudibranch) SCUBA surveys",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f6faf8",
+  "theme_color": "#1f5a4a",
+  "icons": [
+    {
+      "src": "app-icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "app-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "app-icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
