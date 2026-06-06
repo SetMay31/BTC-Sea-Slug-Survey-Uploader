@@ -146,7 +146,28 @@
       <div id="slug-list" class="shark-list"></div>
 
       <button id="add-slug" class="primary add-shark-btn">+ Add a slug</button>
+      <button id="no-slugs" class="no-slugs-btn">No slugs spotted this survey</button>
     </section>
+  </template>
+
+  <!-- "No slugs spotted" submission modal -->
+  <template id="tpl-noslug-modal">
+    <div class="modal-backdrop">
+      <div class="modal">
+        <h3>No slugs spotted</h3>
+        <p class="muted small">Submits one summary row for this survey. The Nudi no., depth, substrate, species and size are all recorded as <strong>NA</strong>.</p>
+        <label>Survey time
+          <input id="noslug-time" type="time" />
+        </label>
+        <label>Notes (optional)
+          <textarea id="noslug-notes" rows="2" maxlength="800" placeholder="Anything worth noting about the survey."></textarea>
+        </label>
+        <div class="modal-actions">
+          <button class="ghost" data-action="cancel">Cancel</button>
+          <button class="primary" data-action="confirm">Submit “no slugs”</button>
+        </div>
+      </div>
+    </div>
   </template>
 
   <!-- Review/submit template -->
@@ -257,8 +278,8 @@
   </template>
 
   <!-- Species list (auto-extracted from the Koh Tao guidebook) loads first -->
-  <script src="species-data.js?v=slug-v3" defer></script>
+  <script src="species-data.js?v=slug-v4" defer></script>
   <!-- Version query forces a fresh app.js fetch when CACHE_VERSION bumps. -->
-  <script src="app.js?v=slug-v3" defer></script>
+  <script src="app.js?v=slug-v4" defer></script>
 </body>
 </html>

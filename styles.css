@@ -845,3 +845,15 @@ button.danger {
 
 /* Review status: "No Slugs" neutral chip */
 .review-status.nodata { background: var(--surface-2); color: var(--ink-muted); }
+
+/* "No slugs spotted" button — dotted ghost outline in the app's accent */
+.no-slugs-btn {
+  width: 100%;
+  min-height: 50px;
+  margin-top: 10px;
+  background: transparent;
+  border: 2px dotted var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+.no-slugs-btn:hover { background: var(--accent-soft); }

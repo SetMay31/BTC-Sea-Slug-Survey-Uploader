@@ -70,7 +70,13 @@ function doPost(e) {
     var newRows = body.rows.map(function (rowObj) {
       return headers.map(function (h) {
         if (h === NUDI_HEADER && nudiCol >= 0) {
-          return nextNudi++; // assign + advance
+          // Only auto-assign a Nudi no. when the app left it blank (a real
+          // slug row). "No slugs spotted" rows send "NA" and keep it.
+          var incoming = rowObj[h];
+          if (incoming === "" || incoming === undefined || incoming === null) {
+            return nextNudi++; // assign + advance
+          }
+          return incoming;
         }
         var v = rowObj[h];
         return (v === undefined || v === null) ? "" : v;

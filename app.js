@@ -681,10 +681,97 @@ function renderSlugs() {
     renderList();
   });
 
+  node.querySelector("#no-slugs").addEventListener("click", openNoSlugsModal);
+
   // Best-effort: refresh the provisional Nudi numbering from the Sheet.
   fetchMaxNudi().then((max) => {
     if (max != null && state.current === "slugs") renderList();
   });
+}
+
+/* =========================================================================
+ *  "NO SLUGS SPOTTED" — submit one summary row (row-1535 format)
+ *  Slug-specific columns are recorded as "NA"; the Apps Script leaves the
+ *  Nudi no. as "NA" rather than assigning a number.
+ * ========================================================================= */
+
+function openNoSlugsModal() {
+  if (!state.draft) return;
+  if (state.draft.submitted) { toast("This survey has already been submitted."); return; }
+  const metaErr = metadataError(state.draft.metadata);
+  if (metaErr) { toast(metaErr + " (fill the Info tab first)."); return; }
+  if (state.draft.slugs.length > 0) {
+    toast("You have slugs logged — submit those via Review, or remove them first.");
+    return;
+  }
+
+  const node = renderModal("tpl-noslug-modal");
+  const timeInp = node.querySelector("#noslug-time");
+  const now = new Date();
+  timeInp.value = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+
+  node.querySelector('[data-action="cancel"]').addEventListener("click", () => closeModal(node));
+  node.querySelector('[data-action="confirm"]').addEventListener("click", () => {
+    const time = timeInp.value;
+    const notes = node.querySelector("#noslug-notes").value.trim();
+    closeModal(node);
+    submitNoSlugsSurvey(time, notes);
+  });
+}
+
+// Build the single "no slugs" row in the exact row-1535 format.
+function buildNoSlugRow(draft, time, notes) {
+  const m = draft.metadata;
+  return [{
+    "Surveyor": joinSurveyors(m),
+    "No. Surveyors": m.numberOfSurveyors || "",
+    "Date DD": m.dateDD || "",
+    "Date MM": m.dateMM || "",
+    "Date YYYY": m.dateYYYY || "",
+    "Dive Site": m.diveSite || "",
+    "Site Region": m.siteRegion === SITE_REGION_OTHER ? (m.siteRegionOther || "Other") : (m.siteRegion || ""),
+    "Temperature (degrees C)": m.temperature || "",
+    "Day or Night": m.dayNight || "",
+    "Survey Start Time (00:00)": time || "",
+    "Nudi no.": "NA",
+    "Depth found (m)(0.0)": "NA",
+    "Substrate found on": "NA",
+    "Coral Growth Form": "",
+    "Coral Health Status": "",
+    "Coral Genus": "",
+    "Species": "NA",
+    "Size (cm)": "NA",
+    "General substrate of survey site from observation": m.generalSubstrate || "",
+    "Notes": notes || "",
+    surveyId: draft.id,
+  }];
+}
+
+async function submitNoSlugsSurvey(time, notes) {
+  if (!state.draft || state.draft.submitted) return;
+  const rows = buildNoSlugRow(state.draft, time, notes);
+  const payload = { rows, headers: SHEET_HEADERS };
+
+  state.queue.push({ id: state.draft.id, queuedAt: new Date().toISOString(), payload });
+  saveQueue();
+  updateQueuePill();
+
+  state.draft.submitted = true;
+  state.draft.noSlugs = true;
+  saveDraft();
+
+  if (!state.settings.syncUrl) {
+    toast("Queued ‘no slugs’ survey locally — will push when a Sheets URL is set.");
+    go("review");
+    return;
+  }
+  try {
+    await flushQueue();
+    toast("Submitted ‘no slugs’ survey to Google Sheets ✓");
+  } catch (e) {
+    toast(`Sync failed (${e.message}). Queued, will retry when online.`);
+  }
+  go("review");
 }
 
 // Provisional Nudi number for the slug at list index `idx` (0-based). Returns
