@@ -857,3 +857,16 @@ button.danger {
   font-weight: 600;
 }
 .no-slugs-btn:hover { background: var(--accent-soft); }
+
+/* Submission blockers panel — clear, on-screen list of what's incomplete */
+.submit-blockers {
+  background: #f6e3d9;
+  border: 1px solid var(--warn);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin: 4px 0 12px;
+}
+.submit-blockers h4 { color: var(--warn); margin: 0 0 8px; font-size: 0.92rem; }
+.submit-blockers ul { margin: 0; padding-left: 18px; }
+.submit-blockers li { font-size: 0.9rem; margin-bottom: 5px; color: var(--ink); }
+.submit-blockers li.clickable { cursor: pointer; text-decoration: underline; color: var(--warn); font-weight: 600; }

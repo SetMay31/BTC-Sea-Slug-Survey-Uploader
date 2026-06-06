@@ -1343,6 +1343,33 @@ function renderReview() {
   }
   sum.appendChild(block);
 
+  // Prominent, on-screen list of everything blocking submission (tooltips are
+  // invisible on phones). Each incomplete slug is tappable to jump to it.
+  const blockers = submissionBlockers();
+  if (!state.draft.submitted && blockers.length) {
+    const panel = document.createElement("div");
+    panel.className = "submit-blockers";
+    const ph = document.createElement("h4");
+    ph.textContent = "Can’t submit yet — finish these first:";
+    panel.appendChild(ph);
+    const ul = document.createElement("ul");
+    blockers.forEach((b) => {
+      const li = document.createElement("li");
+      li.textContent = b.text;
+      if (b.type === "slug") {
+        li.classList.add("clickable");
+        li.addEventListener("click", () => {
+          state.expandedSlug = b.id;
+          go("slugs");
+        });
+      }
+      ul.appendChild(li);
+    });
+    panel.appendChild(ul);
+    const actions = node.querySelector(".review-actions.all-actions");
+    actions.parentNode.insertBefore(panel, actions);
+  }
+
   const submitBtn = node.querySelector("#submit-all");
   const metaErr = metadataError(m);
   const incompleteCount = state.draft.slugs.filter((s) => slugMissingFields(s).length > 0).length;
@@ -1372,6 +1399,24 @@ function renderReview() {
       go("setup");
     }
   });
+}
+
+// Every reason the survey can't be submitted yet, as a flat list. Metadata
+// problems first, then the "no slugs" case, then each incomplete slug with the
+// specific fields it's missing. Empty array => submission is allowed.
+function submissionBlockers() {
+  const d = state.draft;
+  const out = [];
+  const metaErr = metadataError(d.metadata);
+  if (metaErr) out.push({ type: "meta", text: `Survey Info — ${metaErr}` });
+  if (d.slugs.length === 0) {
+    out.push({ type: "noslug", text: "No slugs added — add at least one, or use “No slugs spotted this survey” on the Slugs tab." });
+  }
+  d.slugs.forEach((s, i) => {
+    const miss = slugMissingFields(s);
+    if (miss.length) out.push({ type: "slug", id: s.id, idx: i, text: `Slug ${i + 1} — missing ${miss.join(", ")} (tap to fix)` });
+  });
+  return out;
 }
 
 function reviewStatus() {
