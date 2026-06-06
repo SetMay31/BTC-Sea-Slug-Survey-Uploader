@@ -47,12 +47,9 @@
         </label>
         <div class="surveyor-names hidden"></div>
 
-        <label>Date</label>
-        <div class="date-row">
-          <select name="dateDD" required></select>
-          <select name="dateMM" required></select>
-          <input name="dateYYYY" type="number" min="2000" max="2100" step="1" inputmode="numeric" placeholder="YYYY" required />
-        </div>
+        <label>Date
+          <input name="date" type="date" required />
+        </label>
 
         <label>Dive Site
           <select name="diveSite" required>
@@ -97,12 +94,9 @@
         </label>
         <div class="surveyor-names hidden"></div>
 
-        <label>Date</label>
-        <div class="date-row">
-          <select name="dateDD"></select>
-          <select name="dateMM"></select>
-          <input name="dateYYYY" type="number" min="2000" max="2100" step="1" inputmode="numeric" placeholder="YYYY" />
-        </div>
+        <label>Date
+          <input name="date" type="date" />
+        </label>
 
         <label>Dive Site
           <select name="diveSite">
@@ -278,8 +272,8 @@
   </template>
 
   <!-- Species list (auto-extracted from the Koh Tao guidebook) loads first -->
-  <script src="species-data.js?v=slug-v7" defer></script>
+  <script src="species-data.js?v=slug-v8" defer></script>
   <!-- Version query forces a fresh app.js fetch when CACHE_VERSION bumps. -->
-  <script src="app.js?v=slug-v7" defer></script>
+  <script src="app.js?v=slug-v8" defer></script>
 </body>
 </html>

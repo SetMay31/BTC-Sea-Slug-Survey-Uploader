@@ -186,9 +186,7 @@ function newDraft() {
     metadata: {
       numberOfSurveyors: "",
       surveyorNames: [],
-      dateDD: "",
-      dateMM: "",
-      dateYYYY: "",
+      date: "", // ISO "YYYY-MM-DD"; split into DD/MM/YYYY for the Sheet
       diveSite: "",
       siteRegion: "",
       siteRegionOther: "",
@@ -234,6 +232,10 @@ function loadDraft() {
     if (!d.slugs) d.slugs = [];
     if (!d.metadata) d.metadata = {};
     if (!Array.isArray(d.metadata.surveyorNames)) d.metadata.surveyorNames = [];
+    // Migrate legacy split-date drafts (dateDD/dateMM/dateYYYY) to ISO date.
+    if (!d.metadata.date && d.metadata.dateYYYY && d.metadata.dateMM && d.metadata.dateDD) {
+      d.metadata.date = `${d.metadata.dateYYYY}-${d.metadata.dateMM}-${d.metadata.dateDD}`;
+    }
     if (typeof d.submitted !== "boolean") d.submitted = false;
     return d;
   } catch { return null; }
@@ -403,28 +405,25 @@ function attachDiveSitePicker(select, initialValue) {
  *  SETUP / INFO SHARED FIELD WIRING
  * ========================================================================= */
 
-// Fill the Date DD / MM selects + YYYY input and default to today.
+// Wire the native date picker and default to today. Stores ISO "YYYY-MM-DD"
+// in m.date; the DD/MM/YYYY split happens only when building Sheet rows.
 function setupDateFields(form, m) {
-  const ddSel = form.querySelector('[name="dateDD"]');
-  const mmSel = form.querySelector('[name="dateMM"]');
-  const yyyyInp = form.querySelector('[name="dateYYYY"]');
-  if (ddSel && !ddSel.options.length) {
-    ddSel.appendChild(new Option("DD", ""));
-    for (let d = 1; d <= 31; d++) ddSel.appendChild(new Option(String(d).padStart(2, "0"), String(d).padStart(2, "0")));
-  }
-  if (mmSel && !mmSel.options.length) {
-    mmSel.appendChild(new Option("MM", ""));
-    for (let mo = 1; mo <= 12; mo++) mmSel.appendChild(new Option(String(mo).padStart(2, "0"), String(mo).padStart(2, "0")));
-  }
-  const today = new Date();
-  if (ddSel) ddSel.value = m.dateDD || String(today.getDate()).padStart(2, "0");
-  if (mmSel) mmSel.value = m.dateMM || String(today.getMonth() + 1).padStart(2, "0");
-  if (yyyyInp) yyyyInp.value = m.dateYYYY || String(today.getFullYear());
-  // Reflect the defaults back into the metadata object immediately so a
-  // surveyor who never touches the date still gets today's values stored.
-  if (ddSel) m.dateDD = ddSel.value;
-  if (mmSel) m.dateMM = mmSel.value;
-  if (yyyyInp) m.dateYYYY = yyyyInp.value;
+  const dateInp = form.querySelector('[name="date"]');
+  if (!dateInp) return;
+  if (!m.date) m.date = todayISO();
+  dateInp.value = m.date;
+}
+
+function todayISO() {
+  const t = new Date();
+  return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
+}
+
+// Split an ISO "YYYY-MM-DD" date into { dd, mm, yyyy } strings (blank if unset).
+function splitDate(iso) {
+  const mt = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || "");
+  if (!mt) return { dd: "", mm: "", yyyy: "" };
+  return { yyyy: mt[1], mm: mt[2], dd: mt[3] };
 }
 
 // Populate the Site Region dropdown + wire the "Other" free-text reveal.
@@ -540,9 +539,7 @@ function renderSetup() {
     const meta = {
       numberOfSurveyors: (fd.get("numberOfSurveyors") || "").toString().trim(),
       surveyorNames: m.surveyorNames.map((s) => (s || "").trim()),
-      dateDD: (fd.get("dateDD") || "").toString(),
-      dateMM: (fd.get("dateMM") || "").toString(),
-      dateYYYY: (fd.get("dateYYYY") || "").toString().trim(),
+      date: (fd.get("date") || "").toString(),
       diveSite: (fd.get("diveSite") || "").toString(),
       siteRegion: (fd.get("siteRegion") || "").toString(),
       siteRegionOther: (fd.get("siteRegionOther") || "").toString().trim(),
@@ -566,8 +563,7 @@ function metadataError(meta) {
     return "Enter the number of surveyors.";
   if (!meta.surveyorNames.length || meta.surveyorNames.some((n) => !n))
     return "Enter every surveyor's first name.";
-  if (!meta.dateDD || !meta.dateMM || !meta.dateYYYY)
-    return "Enter the full date (DD / MM / YYYY).";
+  if (!meta.date) return "Choose the survey date.";
   if (!meta.diveSite) return "Choose a dive site.";
   if (!meta.siteRegion) return "Choose a site region.";
   if (meta.siteRegion === SITE_REGION_OTHER && !meta.siteRegionOther)
@@ -607,9 +603,7 @@ function renderInfo() {
   function persist() {
     const fd = new FormData(form);
     m.numberOfSurveyors = (fd.get("numberOfSurveyors") || "").toString().trim();
-    m.dateDD = (fd.get("dateDD") || "").toString();
-    m.dateMM = (fd.get("dateMM") || "").toString();
-    m.dateYYYY = (fd.get("dateYYYY") || "").toString().trim();
+    m.date = (fd.get("date") || "").toString();
     m.diveSite = (fd.get("diveSite") || "").toString();
     m.siteRegion = (fd.get("siteRegion") || "").toString();
     m.siteRegionOther = (fd.get("siteRegionOther") || "").toString().trim();
@@ -630,9 +624,7 @@ function renderInfo() {
     const el = form.querySelector(`[name="${n}"]`);
     if (el) el.addEventListener("input", persist);
   });
-  form.querySelector('[name="dateDD"]').addEventListener("change", persist);
-  form.querySelector('[name="dateMM"]').addEventListener("change", persist);
-  form.querySelector('[name="dateYYYY"]').addEventListener("input", persist);
+  form.querySelector('[name="date"]').addEventListener("change", persist);
   form.querySelector('[name="diveSite"]').addEventListener("change", persist);
 }
 
@@ -722,12 +714,13 @@ function openNoSlugsModal() {
 // Build the single "no slugs" row in the exact row-1535 format.
 function buildNoSlugRow(draft, time, notes) {
   const m = draft.metadata;
+  const d = splitDate(m.date);
   return [{
     "Surveyor": joinSurveyors(m),
     "No. Surveyors": m.numberOfSurveyors || "",
-    "Date DD": m.dateDD || "",
-    "Date MM": m.dateMM || "",
-    "Date YYYY": m.dateYYYY || "",
+    "Date DD": d.dd,
+    "Date MM": d.mm,
+    "Date YYYY": d.yyyy,
     "Dive Site": m.diveSite || "",
     "Site Region": m.siteRegion === SITE_REGION_OTHER ? (m.siteRegionOther || "Other") : (m.siteRegion || ""),
     "Temperature (degrees C)": m.temperature || "",
@@ -1278,7 +1271,7 @@ function renderReview() {
   metaList.className = "review-meta";
   [
     ["Surveyors", `${m.numberOfSurveyors || "—"} (${(m.surveyorNames || []).filter(Boolean).join(", ") || "—"})`],
-    ["Date", `${m.dateDD || "--"}/${m.dateMM || "--"}/${m.dateYYYY || "----"}`],
+    ["Date", (() => { const d = splitDate(m.date); return d.dd ? `${d.dd}/${d.mm}/${d.yyyy}` : "—"; })()],
     ["Dive Site", m.diveSite],
     ["Site Region", m.siteRegion === SITE_REGION_OTHER ? `Other: ${m.siteRegionOther}` : m.siteRegion],
     ["Temperature (°C)", m.temperature],
@@ -1457,12 +1450,13 @@ function joinSurveyors(m) {
 
 function buildRows(draft) {
   const m = draft.metadata;
+  const d = splitDate(m.date);
   const baseMeta = {
     "Surveyor": joinSurveyors(m),
     "No. Surveyors": m.numberOfSurveyors || "",
-    "Date DD": m.dateDD || "",
-    "Date MM": m.dateMM || "",
-    "Date YYYY": m.dateYYYY || "",
+    "Date DD": d.dd,
+    "Date MM": d.mm,
+    "Date YYYY": d.yyyy,
     "Dive Site": m.diveSite || "",
     "Site Region": m.siteRegion === SITE_REGION_OTHER ? (m.siteRegionOther || "Other") : (m.siteRegion || ""),
     "Temperature (degrees C)": m.temperature || "",
@@ -1776,7 +1770,7 @@ function downloadBlob(blob, filename) {
 
 function stampForFilename() {
   const m = state.draft?.metadata || {};
-  const date = (m.dateYYYY && m.dateMM && m.dateDD) ? `${m.dateYYYY}-${m.dateMM}-${m.dateDD}` : new Date().toISOString().slice(0, 10);
+  const date = m.date || new Date().toISOString().slice(0, 10);
   const loc = (m.diveSite || "survey").replace(/[^a-z0-9]+/gi, "_");
   return `${date}-${loc}`;
 }
