@@ -159,7 +159,7 @@ const LS_CUSTOM_SITES = "slug:customDiveSites";
 // Slug Sheet. PASTE THE /exec URL HERE after deploying apps-script.gs (or set
 // it per-device in Settings ⚙). Leaving it blank just means sync is off until
 // a URL is provided — exports still work.
-const DEFAULT_SYNC_URL = "";
+const DEFAULT_SYNC_URL = "https://script.google.com/macros/s/AKfycbzHSJMLksCJK5Be8wvDJ8KNmm-ubIdeAuAy1S-jqF2CyODz-UGFY5-YNTACdsdX9pds0A/exec";
 
 // Shared secret token sent in every submission payload. Must match the
 // SYNC_SECRET constant in apps-script.gs. Rotate by regenerating, updating
