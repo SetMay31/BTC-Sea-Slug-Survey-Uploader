@@ -1405,7 +1405,9 @@ function reviewStatus() {
  * ========================================================================= */
 
 function joinSurveyors(m) {
-  return (m.surveyorNames || []).map((s) => (s || "").trim()).filter(Boolean).join(", ");
+  // Periods between names to match the Sheet's existing convention, e.g.
+  // "Seth. Tereza. Nicole. Thomas".
+  return (m.surveyorNames || []).map((s) => (s || "").trim()).filter(Boolean).join(". ");
 }
 
 function buildRows(draft) {
